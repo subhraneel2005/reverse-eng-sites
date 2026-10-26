@@ -23,6 +23,18 @@ import {
   OnulinkMarginFormula,
   OnulinkSettlementFormula,
   PricingFormulaVisual,
+  TruckTaApiVisual,
+  TruckTaBalanceFormula,
+  TruckTaCapacityFormula,
+  TruckTaCsvImportPipeline,
+  TruckTaDriverPayFormula,
+  TruckTaExtractionPipeline,
+  TruckTaInspectionPipeline,
+  TruckTaLifecycleVisual,
+  TruckTaLocationPipeline,
+  TruckTaOwnerPayFormula,
+  TruckTaRealtimeFlow,
+  TruckTaStatusVisual,
   type VisualProps,
 } from "@/components/docs/visuals"
 
@@ -65,6 +77,22 @@ export const codeVisuals: Record<string, React.ComponentType<VisualProps>> = {
   "draft → posted → booked → pickup_confirmed → in_transit": AhxLifecycleVisual,
   "Payment: not_due → pending_documents → under_review → approved":
     AhxPaymentStatesVisual,
+
+  // TruckTA
+  "Load created/imported": TruckTaLifecycleVisual,
+  "Browser command": TruckTaRealtimeFlow,
+  "available_spots(trailer, delivery_date)": TruckTaCapacityFormula,
+  "Driver selects load/vehicle": TruckTaInspectionPipeline,
+  "operational_status:": TruckTaStatusVisual,
+  "outstanding_balance = invoice_total - sum(valid recorded payments) - valid credits":
+    TruckTaBalanceFormula,
+  "net_driver_pay = gross_driver_pay - deductions + adjustments":
+    TruckTaDriverPayFormula,
+  "net_to_owner = gross - driver_pay - deductions + adjustments":
+    TruckTaOwnerPayFormula,
+  "Driver phone GPS": TruckTaLocationPipeline,
+  Upload: TruckTaCsvImportPipeline,
+  "Private PDF/photo upload": TruckTaExtractionPipeline,
 }
 
 /**
@@ -77,6 +105,7 @@ export const codeVisualPairs: Record<
 > = {
   "POST /api/loads\nGET /api/loads?status=in_transit": OnulinkApiVisual,
   "POST /api/loads\nGET /api/loads?status=posted&origin=...": AhxApiVisual,
+  "POST /api/loads\nGET /api/loads?status=unassigned": TruckTaApiVisual,
 }
 
 export function getVisual(lang: string, code: string) {

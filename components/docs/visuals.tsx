@@ -215,7 +215,8 @@ function FormulaVisual({
   code,
   title,
   badge,
-}: VisualProps & { title: string; badge: string }) {
+  description = "Each term is a documented, versioned adjustment — not a hidden multiplier.",
+}: VisualProps & { title: string; badge: string; description?: string }) {
   const lines = code
     .split("\n")
     .map((line) => line.trim())
@@ -234,7 +235,7 @@ function FormulaVisual({
       icon={<Braces className="size-4" />}
       title={title}
       badge={badge}
-      description="Each term is a documented, versioned adjustment — not a hidden multiplier."
+      description={description}
     >
       <div className="rounded-lg border bg-muted/20 p-4 font-mono text-sm">
         {header ? (
@@ -799,6 +800,291 @@ export function AhxApiVisual(props: VisualProps) {
       {...props}
       title="Example API shape"
       description="Booking endpoints must be idempotent and transactional — two carriers cannot successfully book the same load."
+    />
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* TruckTA                                                             */
+/* ------------------------------------------------------------------ */
+
+const TRUCKTA_ARCHITECTURE = `mindmap
+  root((TruckTA-like TMS))
+    shared[One canonical load record]
+    dispatch[Dispatch Active Board]
+      board[Driver rows · date cards · load cards]
+      conflict[Realtime updates · draft-conflict handling]
+    driver[Driver mobile app · iOS / Android]
+      queue[Offline mutation queue · idempotency keys]
+      evidence[VIN scans · inspections · eBOL · photos]
+    finance[Finance center]
+      ar[A/R · invoices · payments · aging]
+      settle[Driver + owner settlements · frozen snapshots]
+    portal[Owner portal · server-side fleet scoping]
+    compliance[Compliance center]
+      fmcsa[FMCSA checks · evidence + freshness]
+      expiry[Document expiry · audit packets]
+    imports[Imports · CSV / rate-conf PDF · Chrome extension · email]
+    ai[AI assistance · review-first extraction + Q&A]`
+
+export function TruckTaLifecycleVisual({ code }: VisualProps) {
+  const states: { label: string; caption?: string }[] = []
+  let pendingCaption: string | undefined
+
+  for (const raw of code.split("\n")) {
+    const line = raw.trim()
+    if (!line) continue
+    if (/^[|v+\-–—\s]+$/.test(line)) continue
+
+    if (line.startsWith("|")) {
+      const caption = line.replace(/^\|+\s*/, "").trim()
+      if (caption) pendingCaption = caption
+      continue
+    }
+
+    states.push({ label: line, caption: pendingCaption })
+    pendingCaption = undefined
+  }
+
+  return (
+    <VisualFrame
+      icon={<Network className="size-4" />}
+      title="One shared load record"
+      badge="Architecture + lifecycle"
+      description="Dispatch, driver, finance, owner and compliance apps all reference the same canonical load; stages are calculated from recorded events, not picked from a dropdown."
+    >
+      <Mermaid chart={TRUCKTA_ARCHITECTURE} className="py-2" />
+      <FlowStrip
+        steps={[
+          "One canonical load record",
+          "Dispatch Active Board + Driver mobile app",
+          "Finance · invoices, payments, settlements",
+          "Owner portal · server-side fleet scoping",
+          "Compliance · FMCSA + expiry reminders",
+          "Imports + review-first AI",
+        ]}
+      />
+      <div className="mt-5 border-t pt-4">
+        <p className="mb-2.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          Example load lifecycle
+        </p>
+        <ol className="relative space-y-4 pl-9">
+          <span
+            className="absolute top-3 bottom-3 left-3 w-px bg-border"
+            aria-hidden
+          />
+          {states.map((state, index) => (
+            <li key={state.label} className="relative">
+              <span
+                className={cn(
+                  "absolute -left-9 flex size-6 items-center justify-center rounded-full border text-[11px] font-semibold tabular-nums",
+                  index >= states.length - 2
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                    : "bg-background text-muted-foreground"
+                )}
+              >
+                {index + 1}
+              </span>
+              <span className="block text-sm leading-6 font-medium">
+                {state.label}
+              </span>
+              {state.caption ? (
+                <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                  via {state.caption}
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </VisualFrame>
+  )
+}
+
+export function TruckTaStatusVisual({ code }: VisualProps) {
+  const groups: { name: string; main: string[]; exceptions: string[] }[] = []
+  let current: (typeof groups)[number] | null = null
+  let sawMainLine = false
+
+  for (const raw of code.split("\n")) {
+    const line = raw.trim()
+    if (!line) continue
+
+    if (line.endsWith(":") && !line.includes("|")) {
+      current = { name: line.slice(0, -1), main: [], exceptions: [] }
+      sawMainLine = false
+      groups.push(current)
+      continue
+    }
+
+    if (!current) continue
+
+    const parts = line
+      .replace(/^\|/, "")
+      .split("|")
+      .map((part) => part.trim())
+      .filter(Boolean)
+
+    if (!sawMainLine) {
+      current.main.push(...parts)
+      sawMainLine = true
+    } else {
+      current.exceptions.push(...parts)
+    }
+  }
+
+  return (
+    <VisualFrame
+      icon={<Milestone className="size-4" />}
+      title="Operational and receivable status"
+      badge="State machines"
+      description="Two separate state machines on one load: operational progress and financial receivable status — never a single overloaded column."
+    >
+      <div className="space-y-6">
+        {groups.map((group) => (
+          <div key={group.name}>
+            <p className="mb-2.5 font-mono text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {group.name}
+            </p>
+            <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+              {group.main.map((state, index) => (
+                <li key={state} className="flex items-center gap-1.5">
+                  {index > 0 ? (
+                    <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/60" />
+                  ) : null}
+                  <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium">
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {index + 1}
+                    </span>
+                    {state}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            {group.exceptions.length > 0 ? (
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {group.exceptions.map((state) => (
+                  <li
+                    key={state}
+                    className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400"
+                  >
+                    {state}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </VisualFrame>
+  )
+}
+
+export function TruckTaRealtimeFlow(props: VisualProps) {
+  return (
+    <PipelineVisual
+      {...props}
+      title="Realtime Active Board event flow"
+      badge="Event flow"
+      description="A transactional outbox keeps database commits and event publication aligned; clients refetch authoritative data after reconnecting."
+    />
+  )
+}
+
+export function TruckTaCapacityFormula(props: VisualProps) {
+  return (
+    <FormulaVisual
+      {...props}
+      title="Trailer capacity calculation"
+      badge="Capacity"
+      description="One load can carry multiple vehicles — capacity counts vehicles overlapping a delivery date, not load records."
+    />
+  )
+}
+
+export function TruckTaInspectionPipeline(props: VisualProps) {
+  return (
+    <PipelineVisual
+      {...props}
+      title="Inspection → eBOL pipeline"
+      badge="Flow"
+      description="Originals are preserved; signatures store signer, hash, timestamp and consent evidence — a drawn signature alone is not an audit trail."
+    />
+  )
+}
+
+export function TruckTaBalanceFormula(props: VisualProps) {
+  return (
+    <FormulaVisual
+      {...props}
+      title="Outstanding balance"
+      badge="Payment ledger"
+      description="Payments are immutable ledger rows; corrections reverse and reference the original, never overwrite it."
+    />
+  )
+}
+
+export function TruckTaDriverPayFormula(props: VisualProps) {
+  return (
+    <FormulaVisual
+      {...props}
+      title="Net driver pay"
+      badge="Settlements"
+      description="Pay rules (percentage, flat per load, salary) are explicit configuration; approval freezes a snapshot of the source lines."
+    />
+  )
+}
+
+export function TruckTaOwnerPayFormula(props: VisualProps) {
+  return (
+    <FormulaVisual
+      {...props}
+      title="Net to fleet owner"
+      badge="Settlements"
+      description="Recurring charges carry effective dates and frequency; settlement jobs are idempotent against double-application."
+    />
+  )
+}
+
+export function TruckTaLocationPipeline(props: VisualProps) {
+  return (
+    <PipelineVisual
+      {...props}
+      title="Consent-based location pipeline"
+      badge="Flow"
+      description="Device time is stored separately from server receipt time; retention jobs delete history on schedule and implausible jumps are flagged, not invented."
+    />
+  )
+}
+
+export function TruckTaCsvImportPipeline(props: VisualProps) {
+  return (
+    <PipelineVisual
+      {...props}
+      title="CSV import pipeline"
+      badge="Flow"
+      description="Preview and revalidation at commit time — the database can change between preview and confirmation; rejected rows download for fixing."
+    />
+  )
+}
+
+export function TruckTaExtractionPipeline(props: VisualProps) {
+  return (
+    <PipelineVisual
+      {...props}
+      title="AI rate-confirmation extraction"
+      badge="Flow"
+      description="Deterministic parsing first, LLM only when needed; the output is a draft load until a human reviews and approves it."
+    />
+  )
+}
+
+export function TruckTaApiVisual(props: VisualProps) {
+  return (
+    <ApiTableVisual
+      {...props}
+      title="API outline for a comparable product"
+      description="Command endpoints for high-value writes: authenticate, authorize, validate, check version, commit, audit, publish, return canonical state."
     />
   )
 }
