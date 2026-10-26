@@ -20,9 +20,9 @@ import { Separator } from "@/components/ui/separator"
 
 export const metadata: Metadata = {
   title:
-    "Reverse-Engineering Reports — AutoTransport AI, Alvys TMS, Onulink & AHX",
+    "Reverse-Engineering Reports — AutoTransport AI, Alvys TMS, Onulink, AHX & TruckTA",
   description:
-    "Visual reverse-engineering documentation for autotransportai.com, alvys.com, onulink.com and autohaulerexchange.com: architecture mind maps, data models, API contracts, pipelines and build roadmaps.",
+    "Visual reverse-engineering documentation for autotransportai.com, alvys.com, onulink.com, autohaulerexchange.com and truckta.com: architecture mind maps, data models, API contracts, pipelines and build roadmaps.",
 }
 
 function loadReport(file: string) {

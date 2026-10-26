@@ -1,5 +1,11 @@
 import type { LucideIcon } from "lucide-react"
-import { Boxes, Handshake, Smartphone, Truck } from "lucide-react"
+import {
+  Boxes,
+  ClipboardList,
+  Handshake,
+  Smartphone,
+  Truck,
+} from "lucide-react"
 
 import { getVisual } from "@/components/docs/overrides"
 import type { ParsedDoc } from "@/lib/docs/parse"
@@ -83,6 +89,23 @@ export const REPORTS: ReportMeta[] = [
       "Carrier vetting as a compliance state machine with provider checks, expiry monitoring and appeals",
       "Booking concurrency enforced in the database — two carriers cannot win the same load",
       "Payments separated from shipment status with a ledger and document-approval gates",
+    ],
+  },
+  {
+    slug: "truckta",
+    href: "/truckta",
+    file: "truckta_technical_reverse_engineering.md",
+    name: "TruckTA",
+    target: "truckta.com",
+    researchDate: "26 October 2026",
+    icon: ClipboardList,
+    summary:
+      "A vertical SaaS TMS for car haulers built around one canonical load record shared by a dispatch Active Board, driver mobile app, finance center, owner portal, compliance center, review-first imports and optional AI assistance.",
+    highlights: [
+      "One canonical load record powers dispatch, driver app, finance, owner portal and compliance — no shadow copies",
+      "Operational and receivable status are separate state machines; approved settlements freeze as immutable snapshots",
+      "Offline-first driver app: idempotent mutation queue, VIN scans, inspections and eBOL with retry without duplicates",
+      "Review-first everything: imports previewed, FMCSA results evidence-backed, AI extracts to drafts pending human approval",
     ],
   },
 ]

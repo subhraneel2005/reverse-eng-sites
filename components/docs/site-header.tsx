@@ -6,6 +6,7 @@ import { useTheme } from "next-themes"
 import {
   BookOpen,
   Boxes,
+  ClipboardList,
   FileCode2,
   Handshake,
   Moon,
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/alvys-tms", label: "Alvys TMS", icon: Boxes },
   { href: "/onulink", label: "Onulink", icon: Smartphone },
   { href: "/ahx", label: "AHX", icon: Handshake },
+  { href: "/truckta", label: "TruckTA", icon: ClipboardList },
 ] as const
 
 export function SiteHeader() {
